@@ -11,7 +11,7 @@ e o workflow grava o token novo de volta no Secret.
 import datetime, json, os, sys, time, urllib.parse, urllib.request
 
 # ---------------- CONFIGURAÇÃO ----------------
-DATA_INICIO = datetime.date(2026, 10, 28)   # dia em que sai o "Dia 1" (ajustado quando entrar no ar)
+DATA_INICIO = datetime.date(2026, 10, 27)   # dia em que saiu o "Dia 1" (teste de estreia)
 TOTAL_DIAS = 60
 URL_IMAGENS = "https://eneas-ena.github.io/conselho-do-dia/stories"
 API = "https://graph.instagram.com/v26.0"
