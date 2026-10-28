@@ -2,9 +2,13 @@ name: Conselho do Dia
 
 on:
   schedule:
-    # 08:45 UTC = 05:45 em Fortaleza. O GitHub costuma atrasar alguns minutos,
-    # então o Story chega perto das 6h.
-    - cron: "45 8 * * *"
+    # Horários em UTC (Fortaleza = UTC-3). O GitHub não garante que todo
+    # agendamento rode, então há tentativas de reserva; só a primeira publica.
+    - cron: "47 8 * * *"    # 05:47
+    - cron: "13 9 * * *"    # 06:13
+    - cron: "37 9 * * *"    # 06:37
+    - cron: "7 10 * * *"    # 07:07
+    - cron: "43 10 * * *"   # 07:43
   workflow_dispatch:
     inputs:
       dia:
@@ -14,6 +18,9 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: publicar
 
 jobs:
   publicar:

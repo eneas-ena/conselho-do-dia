@@ -1,6 +1,6 @@
 """
 Conselho do Dia — publica 1 Story por dia no Instagram, em ciclo de 60 dias.
-Versão 2.0 (API do Instagram com login do Instagram)
+Versão 2.1 (API do Instagram com login do Instagram)
 
 Não é preciso editar nada aqui. A chave fica guardada nos "Secrets" do GitHub:
   IG_TOKEN -> token gerado no painel da Meta (Instagram > Configuração da API com login do Instagram)
@@ -56,7 +56,16 @@ def renovar_token():
 def main():
     agora = datetime.datetime.now(FUSO)
     hoje = agora.date()
-    dia = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] else dia_do_ciclo(hoje)
+    manual = len(sys.argv) > 1 and sys.argv[1]
+    dia = int(sys.argv[1]) if manual else dia_do_ciclo(hoje)
+
+    # O GitHub às vezes pula um horário agendado; por isso há várias tentativas
+    # por manhã. Se o Story de hoje já saiu, as tentativas seguintes não fazem nada.
+    if not manual and os.path.exists("registro.txt"):
+        with open("registro.txt", encoding="utf-8") as f:
+            if any(l.startswith(f"{hoje:%Y-%m-%d}") for l in f):
+                print(f"O Story de hoje ({hoje}) já foi publicado. Nada a fazer.")
+                return
     imagem = f"{URL_IMAGENS}/conselho-do-dia-{dia:02d}.jpg"
 
     conta = chamar("GET", "me", fields="user_id,username")
