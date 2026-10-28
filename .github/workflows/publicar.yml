@@ -1,0 +1,46 @@
+name: Conselho do Dia
+
+on:
+  schedule:
+    # 08:45 UTC = 05:45 em Fortaleza. O GitHub costuma atrasar alguns minutos,
+    # então o Story chega perto das 6h.
+    - cron: "45 8 * * *"
+  workflow_dispatch:
+    inputs:
+      dia:
+        description: "Publicar um dia específico (1 a 60). Deixe vazio para o dia de hoje."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Publicar Story
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+        run: python publicar.py "${{ github.event.inputs.dia }}"
+      # Aos domingos o programa renova o token; aqui ele é gravado de volta no Secret.
+      - name: Guardar token renovado
+        if: hashFiles('novo_token.txt') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh secret set IG_TOKEN --repo "${{ github.repository }}" < novo_token.txt
+          rm -f novo_token.txt
+      # Grava o registro no repositório. Isso também mantém o repositório "ativo",
+      # pois o GitHub desliga agendamentos de repositórios parados por 60 dias.
+      - name: Salvar registro
+        run: |
+          git config user.name "conselho-do-dia-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add registro.txt
+          git commit -m "Registro: Story publicado" || echo "nada a registrar"
+          git push
