@@ -4,7 +4,7 @@ on:
   schedule:
     # Horários em UTC (Fortaleza = UTC-3). O GitHub não garante que todo
     # agendamento rode, então há tentativas de reserva; só a primeira publica.
-    - cron: "47 8 * * *"    # 05:47
+    - cron: "46 8 * * *"    # 05:46
     - cron: "13 9 * * *"    # 06:13
     - cron: "37 9 * * *"    # 06:37
     - cron: "7 10 * * *"    # 07:07
