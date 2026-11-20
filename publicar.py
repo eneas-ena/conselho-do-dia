@@ -1,6 +1,6 @@
 """
 Conselho do Dia — publica 1 Story por dia no Instagram, em ciclo de 60 dias.
-Versão 2.1 (API do Instagram com login do Instagram)
+Versão 2.2 (API do Instagram com login do Instagram)
 
 Não é preciso editar nada aqui. A chave fica guardada nos "Secrets" do GitHub:
   IG_TOKEN -> token gerado no painel da Meta (Instagram > Configuração da API com login do Instagram)
@@ -72,16 +72,28 @@ def main():
     ig_id = conta["user_id"]
     print(f"Conta @{conta.get('username')} | {hoje} -> Dia {dia}: {imagem}")
 
-    cont = chamar("POST", f"{ig_id}/media", image_url=imagem, media_type="STORIES")
-    cid = cont["id"]
-    for _ in range(30):  # espera o Instagram processar a imagem (até ~5 min)
-        st = chamar("GET", cid, fields="status_code").get("status_code")
-        if st == "FINISHED":
+    # A Meta às vezes falha de forma passageira (ex.: "media not found").
+    # Por isso há até 3 tentativas completas, com pausa entre elas.
+    pub = None
+    for tentativa in range(1, 4):
+        try:
+            cont = chamar("POST", f"{ig_id}/media", image_url=imagem, media_type="STORIES")
+            cid = cont["id"]
+            for _ in range(30):  # espera o Instagram processar a imagem (até ~5 min)
+                st = chamar("GET", cid, fields="status_code").get("status_code")
+                if st == "FINISHED":
+                    break
+                if st == "ERROR":
+                    raise RuntimeError("O Instagram recusou a imagem.")
+                time.sleep(10)
+            time.sleep(5)
+            pub = chamar("POST", f"{ig_id}/media_publish", creation_id=cid)
             break
-        if st == "ERROR":
-            sys.exit("O Instagram recusou a imagem.")
-        time.sleep(10)
-    pub = chamar("POST", f"{ig_id}/media_publish", creation_id=cid)
+        except Exception as e:
+            print(f"Tentativa {tentativa} falhou: {e}")
+            if tentativa == 3:
+                raise
+            time.sleep(30)
     print("Publicado! id:", pub["id"])
 
     with open("registro.txt", "a", encoding="utf-8") as f:
